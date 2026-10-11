@@ -1,0 +1,33 @@
+name: Auditoría de vocabulario
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  auditoria:
+    name: Auditar el vocabulario de la Biblia
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Descargar la Biblia
+        run: python scripts/comprobar_biblia.py datos
+      - name: Generar el informe
+        run: python scripts/auditar_vocabulario.py datos/biblia.json informe.md
+      - name: Publicar el informe en una incidencia
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          titulo="Informe: auditoría de vocabulario"
+          numero=$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --search "in:title \"$titulo\"" --json number --jq '.[0].number')
+          if [ -n "$numero" ]; then
+            gh issue edit "$numero" --repo "$GITHUB_REPOSITORY" --body-file informe.md
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$titulo" --body-file informe.md
+          fi
