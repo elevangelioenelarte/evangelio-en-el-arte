@@ -18,16 +18,23 @@ jobs:
           python-version: "3.12"
       - name: Descargar la Biblia
         run: python scripts/comprobar_biblia.py datos
-      - name: Generar el informe
-        run: python scripts/auditar_vocabulario.py datos/biblia.json informe.md
-      - name: Publicar el informe en una incidencia
+      - name: Generar los informes
+        run: |
+          python scripts/auditar_vocabulario.py datos/biblia.json informe_vocabulario.md
+          python scripts/informe_adaptacion.py datos/biblia.json informe_adaptacion.md
+      - name: Publicar los informes en incidencias
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          titulo="Informe: auditoría de vocabulario"
-          numero=$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --search "in:title \"$titulo\"" --json number --jq '.[0].number')
-          if [ -n "$numero" ]; then
-            gh issue edit "$numero" --repo "$GITHUB_REPOSITORY" --body-file informe.md
-          else
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$titulo" --body-file informe.md
-          fi
+          publicar() {
+            titulo="$1"; archivo="$2"
+            numero=$(gh api "repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+              --jq ".[] | select(.title == \"$titulo\") | .number" | head -n 1)
+            if [ -n "$numero" ]; then
+              gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/$numero" -F body=@"$archivo" --silent
+            else
+              gh api -X POST "repos/$GITHUB_REPOSITORY/issues" -f title="$titulo" -F body=@"$archivo" --silent
+            fi
+          }
+          publicar "Informe: auditoría de vocabulario" informe_vocabulario.md
+          publicar "Informe: adaptación católica" informe_adaptacion.md
