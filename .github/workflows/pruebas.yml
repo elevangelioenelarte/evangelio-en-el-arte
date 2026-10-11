@@ -28,4 +28,4 @@ jobs:
         with:
           python-version: "3.12"
       - name: Descargar la Biblia y resolver las citas de prueba
-        run: python scripts/comprobar_biblia.py datos
+        run: python scripts/comprobar_biblia.py descarga

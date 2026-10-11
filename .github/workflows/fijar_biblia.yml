@@ -1,0 +1,45 @@
+name: Fijar la Biblia
+
+# Descarga la Biblia, la convierte y guarda una copia fechada en el repositorio.
+# Así la producción diaria no depende de la descarga y el texto no cambia sin aviso.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fijar:
+    name: Guardar una copia fechada de la Biblia
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Descargar y convertir
+        run: python scripts/comprobar_biblia.py descarga
+      - name: Guardar la copia
+        run: |
+          mkdir -p datos
+          cp descarga/biblia.json datos/biblia.json
+          {
+            echo "# Biblia del proyecto"
+            echo
+            echo "- Versión: Santa Biblia libre para el mundo (dominio público)"
+            echo "- Origen: https://ebible.org/Scriptures/spablm_usfm.zip"
+            echo "- Fecha de la copia: $(date -u +%Y-%m-%d)"
+            echo "- SHA-256 del archivo original: $(sha256sum descarga/biblia_usfm.zip | cut -d' ' -f1)"
+            echo
+            echo "El texto se guarda sin adaptar. La adaptación al vocabulario católico"
+            echo "se aplica al leerlo (evangelio/adaptacion.py)."
+          } > datos/BIBLIA.md
+      - name: Confirmar el cambio
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datos/biblia.json datos/BIBLIA.md
+          git diff --cached --quiet && echo "Sin cambios" && exit 0
+          git commit -m "Fijar la copia de la Biblia del $(date -u +%Y-%m-%d)"
+          git push

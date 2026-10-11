@@ -59,7 +59,7 @@ class Biblia:
 
     def guardar_json(self, ruta: str | Path) -> None:
         Path(ruta).write_text(
-            json.dumps(self.libros, ensure_ascii=False, indent=0), encoding="utf-8"
+            json.dumps(self.libros, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
         )
 
     # --- consulta --------------------------------------------------------

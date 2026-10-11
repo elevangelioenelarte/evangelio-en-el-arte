@@ -17,11 +17,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Descargar la Biblia
-        run: python scripts/comprobar_biblia.py datos
+        run: python scripts/comprobar_biblia.py descarga
       - name: Generar los informes
         run: |
-          python scripts/auditar_vocabulario.py datos/biblia.json informe_vocabulario.md
-          python scripts/informe_adaptacion.py datos/biblia.json informe_adaptacion.md
+          python scripts/auditar_vocabulario.py descarga/biblia.json informe_vocabulario.md
+          python scripts/informe_adaptacion.py descarga/biblia.json informe_adaptacion.md
       - name: Publicar los informes en incidencias
         env:
           GH_TOKEN: ${{ github.token }}
