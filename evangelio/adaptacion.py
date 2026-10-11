@@ -49,7 +49,14 @@ def _el_senor(m: re.Match[str]) -> str:
     return "El Señor" if _inicio_de_frase(m.string, m.start()) else "el Señor"
 
 
+# Tras «Yahvé,» al abrir frase, estas palabras indican que es sujeto y no vocativo:
+# «Yahvé, pues, dio a Salomón…», «Yahvé, que hizo los cielos…», «Yahvé, el Dios de…».
+_NO_VOCATIVO = r"(?:pues|entonces|que|quien|el|tu|su|vuestro|él|también|además|sin embargo)\b"
+
+
 def _nombre_de_dios(texto: str) -> str:
+    # «Yah, Yahvé» es una sola mención: «el Señor»
+    texto = re.sub(r"\bYah,? (Yahv[eé]h?),?", r"\1", texto)
     # «Señor Yahvé» (Adonai YHWH) -> «Señor Dios»
     texto = re.sub(rf"\bSeñor {_NOMBRE}\b", "Señor Dios", texto)
     # «Yahvé de los Ejércitos» y «Señor de los Ejércitos» -> minúscula litúrgica
@@ -59,12 +66,17 @@ def _nombre_de_dios(texto: str) -> str:
     # Preposiciones que se contraen
     texto = re.sub(rf"\b([Dd])e {_NOMBRE}\b", r"\1el Señor", texto)
     texto = re.sub(rf"\b([Aa]) {_NOMBRE}\b", r"\1l Señor", texto)
+    # Aposición al pronombre: «yo, Yahvé, que os santifico» -> «yo, el Señor,»
+    texto = re.sub(rf"\b([Yy]o,\s*){_NOMBRE}\b", r"\1el Señor", texto)
     # Vocativo entre comas o tras coma: «Escucha, Yahvé, mi voz»
     texto = re.sub(rf"(,\s*){_NOMBRE}\b(?!{_APOSICION})(?=\s*[,.;:!?»”])", r"\1Señor", texto)
 
     # Vocativo al abrir frase: «Yahvé, ¿quién habitará…?» (pero no «Yahvé, tu Dios, …»)
     def _abre(m: re.Match[str]) -> str:
-        return "Señor" if _inicio_de_frase(m.string, m.start()) else "el Señor"
+        if not _inicio_de_frase(m.string, m.start()):
+            return "el Señor"
+        sigue = m.string[m.end():].lstrip(", ")
+        return "El Señor" if re.match(_NO_VOCATIVO, sigue) else "Señor"
 
     texto = re.sub(rf"\b{_NOMBRE}\b(?=,)(?!{_APOSICION})", _abre, texto)
     # Resto de casos
@@ -116,15 +128,22 @@ def _vv(*numeros: int | range) -> frozenset[int]:
     return frozenset(salida)
 
 
+def _may(m: re.Match[str], minuscula: str) -> str:
+    """Conserva la mayúscula inicial de lo sustituido."""
+    return minuscula[0].upper() + minuscula[1:] if m.group(0)[0].isupper() else minuscula
+
+
 _CALIZ = [
-    (r"\b([Ll])a copa\b", r"\1 cáliz"),  # se completa abajo: «el cáliz»
-    (r"\b([Ee])sta copa\b", lambda m: ("E" if m.group(1) == "E" else "e") + "ste cáliz"),
-    (r"\b([Uu])na copa\b", lambda m: m.group(1) + "n cáliz"),
+    (r"\b[Dd]e la copa\b", lambda m: _may(m, "del cáliz")),
+    (r"\b[Aa] la copa\b", lambda m: _may(m, "al cáliz")),
+    (r"\b[Ll]a copa\b", lambda m: _may(m, "el cáliz")),
+    (r"\b[Ee]sta copa\b", lambda m: _may(m, "este cáliz")),
+    (r"\b[Uu]na copa\b", lambda m: _may(m, "un cáliz")),
     (r"\bcopa\b", "cáliz"),
     (r"\bse la dio\b", "se lo dio"),
     (r"\bde ella\b", "de él"),
+    (r"\bla beba\b", "lo beba"),
 ]
-_CALIZ[0] = (r"\b([Ll])a copa\b", lambda m: ("E" if m.group(1) == "L" else "e") + "l cáliz")
 
 _PRESBITEROS = [(r"\b([Aa])ncianos\b", lambda m: ("P" if m.group(1) == "A" else "p") + "resbíteros"),
                 (r"\b([Aa])nciano\b", lambda m: ("P" if m.group(1) == "A" else "p") + "resbítero")]

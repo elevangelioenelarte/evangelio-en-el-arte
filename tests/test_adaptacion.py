@@ -70,6 +70,38 @@ class NombreDeDios(unittest.TestCase):
             "Amarás al Señor, tu Dios, con todo tu corazón.",
         )
 
+    def test_aposicion_al_pronombre(self):
+        self.assertEqual(
+            a("LEV", 21, 8, "Será santo para ti, porque yo, Yahvé, que os santifico, soy santo."),
+            "Será santo para ti, porque yo, el Señor, que os santifico, soy santo.",
+        )
+        self.assertEqual(a("ISA", 27, 3, "Yo, Yahvé, soy su guardián;"), "Yo, el Señor, soy su guardián;")
+
+    def test_sujeto_con_inciso_no_es_vocativo(self):
+        self.assertEqual(
+            a("1KI", 5, 12, "Yahvé, pues, dio a Salomón sabiduría, como le había prometido;"),
+            "El Señor, pues, dio a Salomón sabiduría, como le había prometido;",
+        )
+        self.assertEqual(
+            a("PSA", 146, 6, "Yahvé, que hizo los cielos y la tierra, te bendiga."),
+            "El Señor, que hizo los cielos y la tierra, te bendiga.",
+        )
+
+    def test_vocativos_reales(self):
+        self.assertEqual(a("DEU", 33, 11, "Yahvé, bendice sus habilidades."), "Señor, bendice sus habilidades.")
+        self.assertEqual(a("PSA", 3, 3, "Pero tú, Yahvé, eres escudo en torno a mí,"), "Pero tú, Señor, eres escudo en torno a mí,")
+        self.assertEqual(a("PSA", 139, 1, "Yahvé, tú me has examinado y me conoces."), "Señor, tú me has examinado y me conoces.")
+
+    def test_yah_yahve_es_una_sola_mencion(self):
+        self.assertEqual(
+            a("ISA", 12, 2, "porque Yah, Yahvé, es mi fortaleza y mi cántico;"),
+            "porque el Señor es mi fortaleza y mi cántico;",
+        )
+        self.assertEqual(
+            a("ISA", 26, 4, "porque en Yah, Yahvé, está la Roca de los siglos."),
+            "porque en el Señor está la Roca de los siglos.",
+        )
+
     def test_de_los_ejercitos(self):
         self.assertEqual(
             a("ISA", 25, 6, "Y Yahvé de los Ejércitos hará en este monte un banquete."),
@@ -149,6 +181,13 @@ class Pasajes(unittest.TestCase):
         self.assertEqual(
             a("LUK", 22, 20, "tomó la copa, diciendo: « Esta copa es el nuevo pacto en mi sangre,"),
             "tomó el cáliz, diciendo: « Este cáliz es la nueva alianza en mi sangre,",
+        )
+        self.assertEqual(
+            a("MAT", 26, 42, "si esta copa no puede pasar de mí sin que yo la beba, hágase tu voluntad"),
+            "si este cáliz no puede pasar de mí sin que yo lo beba, hágase tu voluntad",
+        )
+        self.assertEqual(
+            a("1CO", 11, 28, "y así coma del pan y beba de la copa."), "y así coma del pan y beba del cáliz."
         )
         # Una copa cualquiera no cambia
         self.assertEqual(a("MAT", 10, 42, "una copa de agua fría"), "una copa de agua fría")

@@ -194,6 +194,12 @@ class BibliaTexto(unittest.TestCase):
         with self.assertRaises(TextoNoEncontrado):
             self.b.texto("Mt 22,1-14")
 
+    def test_texto_adaptado(self):
+        b = Biblia({"PSA": {23: {1: "Yahvé es mi pastor; nada me faltará."}}})
+        texto, cambios = b.texto_adaptado("Sal 22")
+        self.assertEqual(texto, "El Señor es mi pastor; nada me faltará.")
+        self.assertEqual(len(cambios), 1)
+
     def test_versiculos_unidos_no_duplican(self):
         self.assertEqual(self.b.texto("Flp 4,16-17"), "Versículos unidos en uno solo.")
 

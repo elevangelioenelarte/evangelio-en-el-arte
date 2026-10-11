@@ -69,7 +69,7 @@ def main() -> int:
     resueltas = []
     for cita in CITAS:
         try:
-            texto = biblia.texto(cita)
+            texto, _ = biblia.texto_adaptado(cita)
         except TextoNoEncontrado as e:
             fallos += 1
             print(f"FALLO  {cita}: {e}")

@@ -110,6 +110,12 @@ class Biblia:
     def texto(self, cita: Cita | str, salmo_liturgico: bool = True) -> str:
         return " ".join(v.texto for v in self.versiculos(cita, salmo_liturgico) if v.texto)
 
+    def texto_adaptado(self, cita: Cita | str, salmo_liturgico: bool = True):
+        """Texto de la cita con el vocabulario católico y la lista de cambios hechos."""
+        from .adaptacion import adaptar_versiculos
+
+        return adaptar_versiculos(self.versiculos(cita, salmo_liturgico))
+
     def _rango(
         self, libro: str, c1: int, v1: int | None, c2: int, v2: int | None
     ) -> list[Versiculo]:
