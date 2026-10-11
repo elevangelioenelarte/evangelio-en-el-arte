@@ -37,6 +37,13 @@ CITAS = [
 ]
 
 
+def aviso(titulo: str, mensaje: str, nivel: str = "notice") -> None:
+    """En GitHub Actions deja el dato como anotación, consultable sin abrir el registro."""
+    if os.environ.get("GITHUB_ACTIONS"):
+        limpio = mensaje.replace("%", "%25").replace("\r", "").replace("\n", "%0A")
+        print(f"::{nivel} title={titulo}::{limpio}")
+
+
 def main() -> int:
     carpeta = Path(sys.argv[1] if len(sys.argv) > 1 else "datos")
     carpeta.mkdir(parents=True, exist_ok=True)
@@ -52,16 +59,26 @@ def main() -> int:
     total = sum(len(v) for caps in biblia.libros.values() for v in caps.values())
     print(f"Libros: {len(biblia.libros)} | versículos: {total}")
     print("Códigos:", " ".join(sorted(biblia.libros)))
+    aviso(
+        "Biblia",
+        f"{len(biblia.libros)} libros, {total} versículos, {destino.stat().st_size} bytes. "
+        + " ".join(sorted(biblia.libros)),
+    )
 
     fallos = 0
+    resueltas = []
     for cita in CITAS:
         try:
             texto = biblia.texto(cita)
         except TextoNoEncontrado as e:
             fallos += 1
             print(f"FALLO  {cita}: {e}")
+            aviso(f"Cita no resuelta: {cita}", str(e), "error")
             continue
         print(f"OK     {cita} ({len(texto.split())} palabras): {texto[:160]}...")
+        resueltas.append(f"{cita} ({len(texto.split())} palabras): {texto[:150]}")
+    for i in range(0, len(resueltas), 4):
+        aviso(f"Citas resueltas {i + 1}-{min(i + 4, len(resueltas))}", "\n".join(resueltas[i:i + 4]))
 
     biblia.guardar_json(carpeta / "biblia.json")
     return 1 if fallos else 0
